@@ -1,4 +1,4 @@
-const fetch = require('node-fetch')
+// const fetch = require('node-fetch')
 require('dotenv').config()
 
 module.exports = function(app, passport, db) {
