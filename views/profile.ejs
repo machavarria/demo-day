@@ -35,32 +35,37 @@
 
             </div>
         </div>
+        <div class="col-sm-8">
         <div class="well">
           <h4 class="fa-archive">Past Summaries</h4>
+          <div class="past-summaries">
           <% if (summaries && summaries.length > 0) { %>
-            <ul class="list-unstyled">
               <% summaries.forEach(s => { %>
-                <li class="summary-item">
-                  <strong><%= new Date(s.createdAt).toLocalDateString() %>:</strong>
+                <div class="summary-item">
+                  <strong><%= new Date(s.dateOfSummary).toLocaleDateString() %>:</strong>
                   <p><%= s.summary %></p>
-                </li>
+                </div>
              <% }) %>
-            </ul>
             <% } else { %>
               <p>There are no summaries. Try it out now.</p>
            <% } %>
         </div>
+        </div>
+        </div>
+
         <div class="col-sm-8">
           <div class="well">
           <h3 class="fa-microphone">Summarize your Podcast</h3>
-          <p>Drop a file or enter text to get your podcast summarized</p>
+          <p>Paste your podcast transcript to get a summary</p>
           
 
           <form action="/summarize" method="POST" id="summarizePod">
             <div class="form-group">
-            <textarea type="text" placeholder="Paste here" name="msg" class="form-control"></textarea>
-            <button type="submit">Create Summary</button>
+            <textarea placeholder="Paste your transcript here" name="transcript" class="form-control" rows="8" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Summary</button>
           </form>
+          </div>
         </div>
         
 

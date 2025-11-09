@@ -1,3 +1,6 @@
+const fetch = require('node-fetch')
+require('dotenv').config()
+
 module.exports = function(app, passport, db) {
 
 // normal routes ===============================================================
@@ -11,12 +14,11 @@ module.exports = function(app, passport, db) {
 
     // PROFILE SECTION =========================
     app.get('/profile', isLoggedIn, function(req, res) {
-        db.collection('messages').find().toArray((err, result) => {
+        db.collection('summaries').find({userId: req.user._id}).sort({dateOfSummary: -1}).toArray((err, result) => {
           if (err) return console.log(err)
           res.render('profile.ejs', {
             user : req.user,
-            messages: result,
-            summaries: []
+            summaries: result
           })
         })
     });
@@ -37,35 +39,70 @@ module.exports = function(app, passport, db) {
 
 // message board routes ===============================================================
 
-    app.post('/summarize', isLoggedIn, (req, res) => {
-      const transcript = req.body.transcript;
+// Got advice and help from my house on how to set up the api for my project. And also got help on how the code should look
 
-      fetch('https://api.openai.com/v1/chat/completions',{
-        method: 'post',
-        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      },
+   app.post('/summarize', isLoggedIn, async (req, res) => {
+    try {
+      const { transcript } = req.body;
+      console.log('Transcript received:', transcript)
 
-      body:JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [{role: "system", content: "Take the podcast transcript and summarize it clearly."}, {role: 'user', content : transcript}]
-      })
+      const prompt = `Summarize the following podcast transcript that sounds like it still is coming from the host and is speaking to their audience. Make it conversational and engaging:"${transcript}"`
 
-      })
-      .then(response => response.json())
-      .then(data => {
-
-        let summary = "Not able to get summary";
-        if(data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content){
-          summary = data.choices[0].message.content //Used ai to help me understand the logic for these two lines 
+      const response = await fetch(
+        "https://router.huggingface.co/hf-inference/models/facebook/bart-large-cnn",
+        {
+          method: 'post',
+          headers: {Authorization: `Bearer ${process.env.API_KEY}`, "Content-Type": 'application/json'},
+          body: JSON.stringify({
+            inputs: transcript,
+            parameters: {max_length: 150, min_length: 50, do_sample: true}
+          })
         }
+      )
 
-        res.render('profile.ejs', {user: req.user, summary: summary})
+      const data = await response.json();
+      console.log('AI API response:', data)
+
+      const summary = data[0]?.summary_text || "Could not get summary."
+      console.log('Final summary:', summary)
+      
+      db.collection('summaries').insertOne(
+        {
+          userId: req.user._id,
+          summary: summary,
+          dateOfSummary: new Date()
+        },
+        
+
+        async (err) => {
+          if (err) {
+            console.log('Error saving your summary.', err)
+            return res.render('profile.ejs', {
+              user: req.user,
+              summaries: [],
+              summary: 'Error saving summary'
+            })
+          }
+
+          const summaries = await db.collection('summaries').find({userId: req.user._id}).sort({dateOfSummary: -1}).toArray();
+
+          res.render('profile.ejs', {
+            user: req.user,
+            summaries: summaries
+          })
+        }
+      )
+    
+    } catch (err) {
+      console.log('Error getting summary from AI:', err);
+      res.render('profile.ejs', {
+        user: req.user,
+        summaries: [],
+        summary: 'Error getting summary',
       })
-      .catch(err => {
-        console.log(err);
-        res.render('profile.ejs', {user: req.user, summary: "Error"})
-      })
-    })
+    }
+
+   })
 
 
 // =============================================================================

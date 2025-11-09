@@ -19,12 +19,17 @@ var configDB = require('./config/database.js');
 
 var db
 
+require('dotenv').config()
+
 // configuration ===============================================================
-mongoose.connect(configDB.url, (err, database) => {
-  if (err) return console.log(err)
-  db = database
-  require('./app/routes.js')(app, passport, db);
-}); // connect to our database
+mongoose.connect(configDB.url)
+  .then((client) => {
+    console.log('Connected to MongoDB')
+    db = mongoose.connection;
+    require('./app/routes.js')(app, passport, db);
+})
+.catch(err => console.log(err))
+// connect to our database
 
 require('./config/passport')(passport); // pass passport for configuration
 
