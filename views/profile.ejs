@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+    <title>Podcast AI Companion</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+
+    <div class="page-header text-center">
+        <h1><span class="fa fa-anchor"></span> Podcast AI Companion</h1>
+        <p class="lead">Welcome back, <%= user.local.email %></p>
+        <a href="/logout" class="btn btn-default btn-sm">Logout</a>
+    </div>
+
+    <div class="row">
+
+        <!-- User information / Used Chatgpt to help with making the layout -->
+        <div class="col-sm-4">
+            <div class="well text-center">
+                <h3><span class="fa fa-user"></span> Profile</h3>
+                  <% if (user.local.email) { %>
+                    <p>
+                        <strong>id</strong>: <%= user._id %><br>
+                        <strong>email</strong>: <%= user.local.email %><br>
+                        <strong>password</strong>: <%= user.local.password %>
+                    </p>
+
+                    <a href="/unlink/local" class="btn btn-default">Unlink</a>
+                <% } else { %>
+                    <a href="/connect/local" class="btn btn-default">Connect Local</a>
+                <% } %>
+
+            </div>
+        </div>
+        <div class="well">
+          <h4 class="fa-archive">Past Summaries</h4>
+          <% if (summaries && summaries.length > 0) { %>
+            <ul class="list-unstyled">
+              <% summaries.forEach(s => { %>
+                <li class="summary-item">
+                  <strong><%= new Date(s.createdAt).toLocalDateString() %>:</strong>
+                  <p><%= s.summary %></p>
+                </li>
+             <% }) %>
+            </ul>
+            <% } else { %>
+              <p>There are no summaries. Try it out now.</p>
+           <% } %>
+        </div>
+        <div class="col-sm-8">
+          <div class="well">
+          <h3 class="fa-microphone">Summarize your Podcast</h3>
+          <p>Drop a file or enter text to get your podcast summarized</p>
+          
+
+          <form action="/summarize" method="POST" id="summarizePod">
+            <div class="form-group">
+            <textarea type="text" placeholder="Paste here" name="msg" class="form-control"></textarea>
+            <button type="submit">Create Summary</button>
+          </form>
+        </div>
+        
+
+
+
+<script src="main.js"></script>
+
+</body>
+</html>
